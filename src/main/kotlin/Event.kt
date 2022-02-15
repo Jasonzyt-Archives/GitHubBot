@@ -52,6 +52,14 @@ class Organization {
     var avatar_url: String = ""
 }
 
+open class Committer {
+    var name: String? = null
+    var email: String? = null
+    var username: String? = null
+}
+
+class Pusher : Committer()
+
 class Repository {
     var id: Long = 0
     var node_id: String = ""
@@ -95,21 +103,29 @@ class Repository {
 }
 
 class Commit {
-    class Author {
-        var name: String? = null
-        var email: String? = null
-        var username: String? = null
+    class Tree {
+        var url: String = ""
+        var sha: String = ""
+    }
+    class Verification {
+        var verified: Boolean = false
+        var reason: String? = null
+        var signature: String? = null
+        var payload: String? = null
     }
     var id: String = ""
     var tree_id: String = ""
     var distinct: Boolean = false
     var message: String? = null
     var timestamp: String = ""
-    var author: Author? = null
-    var committer: Author? = null
+    var author: Committer? = null
+    var committer: Committer? = null
     var added: List<String>? = null
     var removed: List<String>? = null
     var modified: List<String>? = null
+    var comment_count: Int = 0
+    var tree: Tree? = null
+    var verification: Verification? = null
 
     var url: String = ""
 }
@@ -299,6 +315,44 @@ class Reactions {
     var eyes: Int = 0
 }
 
+class Release {
+    class Asset {
+        var id: Long = 0
+        var node_id: String = ""
+        var name: String = ""
+        var label: String? = null
+        var uploader: User? = null
+        var content_type: String? = null
+        var state: String = ""
+        var size: Int = 0
+        var download_count: Int = 0
+        var created_at: String = ""
+        var updated_at: String? = null
+        var browser_download_url: String = ""
+
+        var url: String = ""
+    }
+    var id: Long = 0
+    var node_id: String = ""
+    var tag_name: String = ""
+    var target_commitish: String = ""
+    var name: String? = null
+    var body: String? = null
+    var draft: Boolean = false
+    var prerelease: Boolean = false
+    var created_at: String = ""
+    var published_at: String? = null
+    var author: User? = null
+    var assets: List<Asset>? = null
+
+    var url: String = ""
+    var html_url: String = ""
+    var assets_url: String = ""
+    var upload_url: String = ""
+    var tarball_url: String = ""
+    var zipball_url: String = ""
+}
+
 class License {
     var key: String = ""
     var name: String = ""
@@ -354,27 +408,27 @@ enum class EventType {
     CheckRun,
     CheckSuite,
     CodeScanningAlert,
-    CommitComment,         // Done
-    Create,                // Done
-    Delete,                // Done
+    CommitComment,             // Done
+    Create,                    // Done
+    Delete,                    // Done
     DeployKey,
     Deployment,
     DeploymentStatus,
-    Discussion,            // Done
-    DiscussionComment,     // Done
-    Fork,                  // Done
+    Discussion,                // Done
+    DiscussionComment,         // Done
+    Fork,                      // Done
     GithubAppAuthorization,
-    Gollum,
+    Gollum,                    // Done
     Installation,
     InstallationRepositories,
-    IssueComment,
-    Issues,
-    Label,
+    IssueComment,              // Done
+    Issues,                    // Done
+    Label,                     // Done
     MarketplacePurchase,
-    Member,
+    Member,                    // Done
     Membership,
     Meta,
-    Milestone,
+    Milestone,                 // Done
     Organization,
     OrgBlock,
     Package,
@@ -384,23 +438,23 @@ enum class EventType {
     ProjectCard,
     ProjectColumn,
     Public,
-    PullRequest,
+    PullRequest,               // Done
     PullRequestReview,
     PullRequestReviewComment,
-    Push,
-    Release,
+    Push,                      // Done
+    Release,                   // Done
     RepositoryDispatch,
-    Repository,
+    Repository,                // Done
     RepositoryImport,
     RepositoryVulnerabilityAlert,
     SecretScanningAlert,
     SecurityAdvisory,
     Sponsorship,
-    Star,
+    Star,                      // Done
     Status,
     Team,
     TeamAdd,
-    Watch,
+    Watch,                     // Done
     WorkflowDispatch,
     WorkflowJob,
     WorkflowRun;
@@ -674,6 +728,49 @@ enum class ReleaseAction {
     }
 }
 
+enum class RepositoryAction {
+    None,
+    Created,
+    Deleted,
+    Archived,
+    Unarchived,
+    Edited,
+    Renamed,
+    Transferred,
+    Publicized,
+    Privatized;
+
+    companion object {
+        fun value(name: String): RepositoryAction {
+            val realName = name.toLowerCase().dropWhile { it == '_' }
+            for (v in RepositoryAction.values()) {
+                if (v.name.toLowerCase() == name) {
+                    return v
+                }
+            }
+            return RepositoryAction.None
+        }
+    }
+}
+
+enum class StarAction {
+    None,
+    Created,
+    Deleted;
+
+    companion object {
+        fun value(name: String): StarAction {
+            val realName = name.toLowerCase().dropWhile { it == '_' }
+            for (v in StarAction.values()) {
+                if (v.name.toLowerCase() == name) {
+                    return v
+                }
+            }
+            return StarAction.None
+        }
+    }
+}
+
 open class Event (
     val type: EventType = EventType.None,
     open val guid: String
@@ -692,6 +789,9 @@ open class Event (
     var created: Boolean? = null
     var deleted: Boolean? = null
     var forced: Boolean? = null
+    var base_ref: String? = null
+    var compare: String? = null
+    var starred_at: String? = null
 
     var organization: Organization? = null
     var repository: Repository? = null
@@ -707,6 +807,11 @@ open class Event (
     var milestone: Milestone? = null
     var pull_request: PullRequest? = null
     var requested_reviewer: User? = null
+    var head_commit: Commit? = null
+    var commits: List<Commit>? = null
+    var pusher: Pusher? = null
+    var release: Release? = null
+    var commit: Commit? = null
 
     companion object {
         fun fromJson(str: String): Event? {
