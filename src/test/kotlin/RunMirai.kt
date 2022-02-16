@@ -1,4 +1,4 @@
-package org.example.mirai.plugin
+package com.jasonzyt.mirai.githubbot
 
 import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.console.MiraiConsole
@@ -15,10 +15,6 @@ suspend fun main() {
     //如果是Java
 //    JavaPluginMain.INSTANCE.load()
 //    JavaPluginMain.INSTANCE.enable()
-
-    val bot = MiraiConsole.addBot(123456, "") {
-        fileBasedDeviceInfo()
-    }.alsoLogin()
 
     MiraiConsole.job.join()
 }

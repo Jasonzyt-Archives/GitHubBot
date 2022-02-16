@@ -3,7 +3,6 @@ pluginManagement {
         mavenLocal()
         gradlePluginPortal()
         mavenCentral()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
 rootProject.name = "GitHubBot"

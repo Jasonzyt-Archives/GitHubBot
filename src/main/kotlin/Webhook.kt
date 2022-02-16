@@ -28,6 +28,9 @@ object Webhook {
         if (req.path() == Settings.webhookPath) {
             if (checkSignature(req.body().toString(), req.header("X-Hub-Signature-256").toString())) {
                 val event = req.header("X-GitHub-Event").toString()
+                when (EventType.value(event)) {
+
+                }
             } else {
                 PluginMain.logger.warning("Webhook: Invalid signature. Ignored.")
                 resp.code(403) // Forbidden

@@ -1,5 +1,6 @@
 package com.jasonzyt.mirai.githubbot
 
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -22,6 +23,10 @@ object Utils {
             sb.append(temp)
         }
         return sb.toString()
+    }
+
+    fun base64Encode(bytes: ByteArray): String {
+        return Base64.getEncoder().encodeToString(bytes)
     }
 
 }

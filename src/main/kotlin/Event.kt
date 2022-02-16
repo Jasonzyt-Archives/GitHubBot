@@ -150,15 +150,17 @@ class Issue {
     var active_lock_reason: String? = null
     var closed_by: User? = null
     var reactions: Reactions? = null
-    // todo: PR&Project support
+    var pull_request: PullRequest? = null
     var timeline_url: String? = null
     var parformed_via_github_app: Boolean? = null
+
+    var url: String = ""
+    var html_url: String = ""
 }
 
 class PullRequest {
     var id: Long = 0
     var node_id: String = ""
-    var url: String = ""
     var number: Int = 0
     var state: String = ""
     var locked: Boolean = false
@@ -195,6 +197,9 @@ class PullRequest {
     var additions: Int = 0
     var deletions: Int = 0
     var changed_files: Int = 0
+
+    var url: String = ""
+    var html_url: String = ""
 }
 
 class PullRequestHead {
@@ -401,6 +406,19 @@ class Rule {
     var repository: Repository? = null
 }
 
+class Error {
+    var message: String? = null
+    var documentation_url: String? = null
+}
+
+class IssueOrPullRequest {
+    var issue: Issue? = null
+    var pullRequest: PullRequest? = null
+
+    fun isIssue(): Boolean {
+        return issue != null
+    }
+}
 
 enum class EventType {
     None,

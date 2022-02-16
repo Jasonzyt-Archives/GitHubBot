@@ -22,4 +22,5 @@ dependencies {
     implementation("org.rapidoid:rapidoid-quick:5.5.5")
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.9.0")
+    compileOnly("xyz.cssxsh.mirai:mirai-selenium-plugin:2.0.8")
 }
