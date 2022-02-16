@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.load
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -34,7 +35,9 @@ object PluginMain : KotlinPlugin(
     }
 
     override fun onEnable() {
-        logger.info { "Plugin loaded" }
+        logger.info("GitHubBot loaded! Author: Jasonzyt")
+        logger.info("GitHub Repository: https://github.com/Jasonzyt/GitHubBot")
+        Settings.reload()
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent>{
 

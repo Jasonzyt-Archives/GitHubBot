@@ -1,7 +1,7 @@
 package com.jasonzyt.mirai.githubbot
 
 import com.google.gson.Gson
-import com.github.kevinsawicki.http.HttpRequest
+import okhttp3.*
 
 object GitHub {
     var auth: String? = null
@@ -9,10 +9,9 @@ object GitHub {
     class Repo(val name: String) {
 
         fun getIssue(id: Int): Issue? {
-            val resp = HttpRequest.get("https://api.github.com/repos/$name/issues/$id")
-                .header("Authorization", auth!!)
-            if (resp.code() == 200) {
-                val json = resp.body()
+            val resp = httpGet("https://api.github.com/repos/${name}/issues/$id")
+            if (resp.code == 200) {
+                val json = resp.body.toString()
                 return try {
                     Gson().fromJson(json, Issue::class.java)
                 } catch (e: Exception) {
@@ -26,10 +25,9 @@ object GitHub {
 
         fun getIssueOrPullRequest(id: Int): IssueOrPullRequest? {
             val issueOrPullRequest = IssueOrPullRequest()
-            val resp = HttpRequest.get("https://api.github.com/repos/$name/pulls/$id")
-                .header("Authorization", auth!!)
-            if (resp.code() == 200) {
-                val json = resp.body()
+            val resp = httpGet("https://api.github.com/repos/$name/issues/$id")
+            if (resp.code == 200) {
+                val json = resp.body.toString()
                 issueOrPullRequest.pullRequest = try {
                     Gson().fromJson(json, PullRequest::class.java)
                 } catch (e: Exception) {
@@ -38,7 +36,7 @@ object GitHub {
                     null
                 }
             }
-            else if (resp.code() == 404) {
+            else if (resp.code == 404) {
                 val issue = getIssue(id) ?: return null
                 issueOrPullRequest.issue = issue
             }
@@ -46,20 +44,46 @@ object GitHub {
         }
 
         fun getStarCount(): Int {
-            val resp = HttpRequest.get("https://api.github.com/repos/$name")
-                .header("Authorization", auth!!)
-            if (resp.code() == 200) {
-                val json = resp.body()
+            val resp = httpGet("https://api.github.com/repos/$name")
+            if (resp.code == 200) {
+                val json = resp.body.toString()
                 return try {
                     Gson().fromJson(json, Repository::class.java).stargazers_count
                 } catch (e: Exception) {
                     PluginMain.logger.error("Failed to parse event JSON: $json")
                     PluginMain.logger.error(e)
-                    0
+                    -1
                 }
             }
-            return 0
+            return -1
         }
+
+        fun getCommitCount(): Int {
+            val resp = httpGet("https://api.github.com/repos/$name/commits?per_page=1")
+            if (resp.code == 200) {
+                val link = resp.headers["link"]
+                if (link != null) {
+                    Regex("<(.+)page=(\\d+)>; rel=\"last\"").find(link)?.let {
+                        if (it.groupValues.size == 2) {
+                            return@getCommitCount it.groupValues[1].toInt()
+                        }
+                        return@getCommitCount -1
+                    }
+                }
+            }
+            return -1
+        }
+    }
+
+    fun httpGet(url: String, headersBuilder: Headers.Builder = Headers.Builder()): Response {
+        headersBuilder.add("Authorization", auth!!)
+        headersBuilder.add("Accept", "application/vnd.github.v3+json")
+        val httpClient = OkHttpClient()
+        val request = Request.Builder()
+            .url(url)
+            .headers(headersBuilder.build())
+            .build()
+        return httpClient.newCall(request).execute()
     }
 
     fun setToken(token: String) {
