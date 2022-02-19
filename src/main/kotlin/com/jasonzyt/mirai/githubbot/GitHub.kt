@@ -30,21 +30,6 @@ object GitHub {
 
     class Repo(val name: String) {
 
-        fun getIssue(id: Int): Issue? {
-            val resp = httpGet("https://api.github.com/repos/${name}/issues/$id")
-            if (resp.code == 200) {
-                val json = resp.body?.charStream()?.readText()
-                return try {
-                    Gson().fromJson(json, Issue::class.java)
-                } catch (e: Exception) {
-                    PluginMain.logger.error("Failed to parse event JSON: $json")
-                    PluginMain.logger.error(e)
-                    null
-                }
-            }
-            return null
-        }
-
         fun getCommunication(id: Int): Communication {
             val communication = Communication()
             var resp = httpGet("https://api.github.com/repos/$name/pulls/$id")
@@ -57,8 +42,10 @@ object GitHub {
                     PluginMain.logger.error(e)
                     null
                 }
+                resp.close()
                 return communication
             }
+            resp.close()
             resp = httpGet("https://api.github.com/repos/$name/discussions/$id")
             if (resp.code == 200) {
                 val json = resp.body?.string()
@@ -69,8 +56,10 @@ object GitHub {
                     PluginMain.logger.error(e)
                     null
                 }
+                resp.close()
                 return communication
             }
+            resp.close()
             resp = httpGet("https://api.github.com/repos/$name/issues/$id")
             if (resp.code == 200) {
                 val json = resp.body?.string()
@@ -81,8 +70,10 @@ object GitHub {
                     PluginMain.logger.error(e)
                     null
                 }
+                resp.close()
                 return communication
             }
+            resp.close()
             return communication
         }
 
@@ -90,6 +81,7 @@ object GitHub {
             val resp = httpGet("https://api.github.com/repos/$name")
             if (resp.code == 200) {
                 val json = resp.body?.charStream()?.readText()
+                resp.close()
                 return try {
                     Gson().fromJson(json, Repository::class.java).stargazers_count
                 } catch (e: Exception) {
@@ -98,6 +90,7 @@ object GitHub {
                     -1
                 }
             }
+            resp.close()
             return -1
         }
 
@@ -105,6 +98,7 @@ object GitHub {
             val resp = httpGet("https://api.github.com/repos/$name/commits?per_page=1")
             if (resp.code == 200) {
                 val link = resp.headers["link"]
+                resp.close()
                 if (link != null) {
                     Regex("<(.+)page=(\\d+)>; rel=\"last\"").find(link)?.let {
                         if (it.groupValues.size == 2) {
@@ -114,6 +108,7 @@ object GitHub {
                     }
                 }
             }
+            resp.close()
             return -1
         }
     }

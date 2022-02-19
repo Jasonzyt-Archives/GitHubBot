@@ -10,6 +10,8 @@ import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
+import java.util.logging.Level
+import java.util.logging.Logger
 
 
 object PluginMain : KotlinPlugin(
@@ -66,6 +68,7 @@ object PluginMain : KotlinPlugin(
         logger.info("GitHubBot loaded! Author: Jasonzyt")
         logger.info("GitHub Repository: https://github.com/Jasonzyt/GitHubBot")
         Settings.reload()
+        //Logger.getLogger(okhttp3.OkHttpClient::class.java.name).level = Level.OFF
         GitHub.setToken(Settings.restApiToken)
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent>{ ev ->
