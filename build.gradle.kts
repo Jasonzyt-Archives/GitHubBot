@@ -11,15 +11,17 @@ version = "0.1.0"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
+    // Only required if using EAP releases
+    maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     mavenCentral()
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/com.github.kevinsawicki/http-request
-    implementation("com.github.kevinsawicki:http-request:6.0")
-    // https://mvnrepository.com/artifact/org.rapidoid/rapidoid-http
-    implementation("org.rapidoid:rapidoid-quick:5.5.5")
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.9.0")
     compileOnly("xyz.cssxsh.mirai:mirai-selenium-plugin:2.0.8")
+    implementation("io.ktor:ktor-server-core:2.0.0-beta-1")
+    implementation("io.ktor:ktor-server-netty:2.0.0-beta-1")
+    implementation("io.ktor:ktor-server-status-pages:2.0.0-beta-1")
+    implementation("io.ktor:ktor-server-default-headers:2.0.0-beta-1")
 }

@@ -2,6 +2,7 @@ package com.jasonzyt.mirai.githubbot
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import java.util.*
 
 open class User {
     var id: Long = 0
@@ -37,6 +38,10 @@ open class User {
     var url: String = ""
     var html_url: String = ""
     var avatar_url: String = ""
+
+    override fun toString(): String {
+        return login
+    }
 }
 
 class Team : User()
@@ -50,12 +55,20 @@ class Organization {
 
     var url: String = ""
     var avatar_url: String = ""
+
+    override fun toString(): String {
+        return login
+    }
 }
 
 open class Committer {
     var name: String? = null
     var email: String? = null
     var username: String? = null
+
+    override fun toString(): String {
+        return name!!
+    }
 }
 
 class Pusher : Committer()
@@ -67,16 +80,11 @@ class Repository {
     var full_name: String = ""
     var private: Boolean = false
     var owner: User? = null
-    var url: String = ""
     var description: String? = null
     var fork: Boolean = false
     var created_at: String = ""
     var updated_at: String? = null
     var pushed_at: String? = null
-    var git_url: String = ""
-    var ssh_url: String = ""
-    var clone_url: String = ""
-    var svn_url: String = ""
     var homepage: String? = null
     var size: Int = 0
     var stargazers_count: Int = 0
@@ -91,7 +99,6 @@ class Repository {
     var has_downloads: Boolean = false
     var has_wiki: Boolean = false
     var has_pages: Boolean = false
-    var mirror_url: String? = null
     var archived: Boolean = false
     var disabled: Boolean = false
     var license: License? = null
@@ -100,6 +107,17 @@ class Repository {
     var topics: List<String>? = null
     var default_branch: String = ""
     var temp_clone_token: String? = null
+
+    var url: String = ""
+    var git_url: String = ""
+    var ssh_url: String = ""
+    var clone_url: String = ""
+    var svn_url: String = ""
+    var mirror_url: String? = null
+
+    override fun toString(): String {
+        return full_name
+    }
 }
 
 class Commit {
@@ -128,6 +146,11 @@ class Commit {
     var verification: Verification? = null
 
     var url: String = ""
+    var html_url: String = ""
+
+    override fun toString(): String {
+        return tree!!.sha
+    }
 }
 
 class Issue {
@@ -200,6 +223,10 @@ class PullRequest {
 
     var url: String = ""
     var html_url: String = ""
+
+    override fun toString(): String {
+        return title
+    }
 }
 
 class PullRequestHead {
@@ -208,6 +235,10 @@ class PullRequestHead {
     var sha: String = ""
     var user: User? = null
     var repo: Repository? = null
+
+    override fun toString(): String {
+        return sha
+    }
 }
 
 class PullRequestBase {
@@ -216,12 +247,15 @@ class PullRequestBase {
     var sha: String = ""
     var user: User? = null
     var repo: Repository? = null
+
+    override fun toString(): String {
+        return sha
+    }
 }
 
 class Discussion {
     var id: Long = 0
     var node_id: String = ""
-    var url: String = ""
     var number: Int = 0
     var category: Category? = null
     var body: String? = null
@@ -238,6 +272,13 @@ class Discussion {
     var answer_html_url: String? = null
     var answer_chosen_at: String? = null
     var answer_chosen_by: User? = null
+
+    var url: String = ""
+    var html_url: String = ""
+
+    override fun toString(): String {
+        return title!!
+    }
 }
 
 class Category {
@@ -250,6 +291,10 @@ class Category {
     var created_at: String = ""
     var updated_at: String? = null
     var is_answerable: Boolean = false
+
+    override fun toString(): String {
+        return name
+    }
 }
 
 class Comment {
@@ -285,13 +330,15 @@ class Label {
     var color: String = ""
     var description: String = ""
     var default: Boolean = false
+
+    override fun toString(): String {
+        return name
+    }
 }
 
 class Milestone {
     var id: Long = 0
     var node_id: String = ""
-    var url: String = ""
-    var labels_url: String = ""
     var number: Int = 0
     var state: String = ""
     var title: String = ""
@@ -303,10 +350,16 @@ class Milestone {
     var updated_at: String? = null
     var closed_at: String? = null
     var due_on: String? = null
+
+    var url: String = ""
+    var labels_url: String = ""
+
+    override fun toString(): String {
+        return title
+    }
 }
 
 class Reactions {
-    var url: String = ""
     var total_count: Int = 0
     @SerializedName("+1")
     var plus: Int = 0
@@ -318,6 +371,40 @@ class Reactions {
     var heart: Int = 0
     var rocket: Int = 0
     var eyes: Int = 0
+
+    var url: String = ""
+
+    override fun toString(): String {
+        val builder = StringBuilder()
+        if (plus > 0) {
+            builder.append(Utils.getEmoji("1f44d")).append(plus).append(" ")
+        }
+        if (minus > 0) {
+            builder.append(Utils.getEmoji("1f44e")).append(minus).append(" ")
+        }
+        if (laugh > 0) {
+            builder.append(Utils.getEmoji("1f604")).append(laugh).append(" ")
+        }
+        if (hooray > 0) {
+            builder.append(Utils.getEmoji("1f389")).append(hooray).append(" ")
+        }
+        if (confused > 0) {
+            builder.append(Utils.getEmoji("1f615")).append(confused).append(" ")
+        }
+        if (heart > 0) {
+            builder.append(Utils.getEmoji("2764")).append(heart).append(" ")
+        }
+        if (rocket > 0) {
+            builder.append(Utils.getEmoji("1f680")).append(rocket).append(" ")
+        }
+        if (eyes > 0) {
+            builder.append(Utils.getEmoji("1f440")).append(eyes).append(" ")
+        }
+        if (builder[builder.length - 1] == ' ') {
+            builder.deleteCharAt(builder.length - 1)
+        }
+        return builder.toString()
+    }
 }
 
 class Release {
@@ -333,9 +420,9 @@ class Release {
         var download_count: Int = 0
         var created_at: String = ""
         var updated_at: String? = null
-        var browser_download_url: String = ""
 
         var url: String = ""
+        var browser_download_url: String = ""
     }
     var id: Long = 0
     var node_id: String = ""
@@ -356,6 +443,10 @@ class Release {
     var upload_url: String = ""
     var tarball_url: String = ""
     var zipball_url: String = ""
+
+    override fun toString(): String {
+        return name ?: tag_name
+    }
 }
 
 class License {
@@ -364,6 +455,10 @@ class License {
     var spdx_id: String = ""
     var url: String? = null
     var node_id: String = ""
+
+    override fun toString(): String {
+        return name
+    }
 }
 
 class Page {
@@ -409,15 +504,6 @@ class Rule {
 class Error {
     var message: String? = null
     var documentation_url: String? = null
-}
-
-class IssueOrPullRequest {
-    var issue: Issue? = null
-    var pullRequest: PullRequest? = null
-
-    fun isIssue(): Boolean {
-        return issue != null
-    }
 }
 
 enum class EventType {
@@ -485,7 +571,7 @@ enum class EventType {
                     return eventType
                 }
             }
-            return EventType.None
+            return None
         }
     }
 }
@@ -508,172 +594,31 @@ enum class AuthorAssociation {
                     return v
                 }
             }
-            return AuthorAssociation.None
+            return None
         }
     }
 }
 
-enum class DiscussionAction {
+enum class Action {
     None,
     Created,
-    Edited,
     Deleted,
-    Pinned,
-    Unpinned,
-    Locked,
-    Unlocked,
+    Edited,
+    Renamed,
+    Followed,
+    Unfollowed,
+    Archived,
+    Unarchived,
     Transferred,
-    CategoryChanged,
-    Answered,
-    Unanswered,
-    Labeled,
-    Unlabeled;
-
-    companion object {
-        fun value(name: String): DiscussionAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in DiscussionAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return DiscussionAction.None
-        }
-    }
-}
-
-enum class PageAction {
-    None,
-    Created,
-    Edited;
-
-    companion object {
-        fun value(name: String): PageAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in PageAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return PageAction.None
-        }
-    }
-}
-
-enum class IssueAction {
-    None,
+    Publicized,
+    Privatized,
+    Published,
+    Unpublished,
+    Prereleased,
+    Released,
+    Submitted,
+    Dismissed,
     Opened,
-    Edited,
-    Deleted,
-    Pinned,
-    Unpinned,
-    Closed,
-    Reopened,
-    Assigned,
-    Unassigned,
-    Labeled,
-    Unlabeled,
-    Locked,
-    Unlocked,
-    Transferred,
-    Milestoned,
-    Demilestoned;
-
-    companion object {
-        fun value(name: String): IssueAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in IssueAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return IssueAction.None
-        }
-    }
-}
-
-enum class CommentAction {
-    None,
-    Created,
-    Edited,
-    Deleted;
-
-    companion object {
-        fun value(name: String): CommentAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in CommentAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return CommentAction.None
-        }
-    }
-}
-
-enum class LabelAction {
-    None,
-    Created,
-    Edited,
-    Deleted;
-
-    companion object {
-        fun value(name: String): LabelAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in LabelAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return LabelAction.None
-        }
-    }
-}
-
-enum class MemberAction {
-    None,
-    Added,
-    Removed,
-    Edited;
-
-    companion object {
-        fun value(name: String): MemberAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in MemberAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return MemberAction.None
-        }
-    }
-}
-
-enum class MilestoneAction {
-    None,
-    Created,
-    Closed,
-    Opened,
-    Edited,
-    Deleted;
-
-    companion object {
-        fun value(name: String): MilestoneAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in MilestoneAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return MilestoneAction.None
-        }
-    }
-}
-
-enum class PullRequestAction {
-    None,
-    Opened,
-    Edited,
     Closed,
     Reopened,
     Synchronize,
@@ -686,112 +631,34 @@ enum class PullRequestAction {
     ReadyForReview,
     Locked,
     Unlocked,
-    Transferred,
     Demilestoned,
     Milestoned,
     AutoMergeDisabled,
     AutoMergeEnabled,
-    ConvertedToDraft;
+    ConvertedToDraft,
+    Added,
+    Removed,
+    CategoryChanged,
+    Answered,
+    Unanswered;
 
     companion object {
-        fun value(name: String): PullRequestAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in PullRequestAction.values()) {
-                if (v.name.toLowerCase() == name) {
+        fun fromString(name: String): Action {
+            val realName = name.lowercase(Locale.getDefault()).dropWhile { it == '_' }
+            for (v in Action.values()) {
+                if (v.name.lowercase(Locale.getDefault()) == name) {
                     return v
                 }
             }
-            return PullRequestAction.None
+            return None
         }
     }
-}
 
-enum class PullRequestReviewAction {
-    Submitted,
-    Edited,
-    Dismissed;
-
-    companion object {
-        fun value(name: String): PullRequestReviewAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in PullRequestReviewAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return PullRequestReviewAction.Submitted
-        }
-    }
-}
-
-enum class ReleaseAction {
-    None,
-    Published,
-    Unpublished,
-    Edited,
-    Deleted,
-    Prereleased,
-    Released;
-
-    companion object {
-        fun value(name: String): ReleaseAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in ReleaseAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return ReleaseAction.None
-        }
-    }
-}
-
-enum class RepositoryAction {
-    None,
-    Created,
-    Deleted,
-    Archived,
-    Unarchived,
-    Edited,
-    Renamed,
-    Transferred,
-    Publicized,
-    Privatized;
-
-    companion object {
-        fun value(name: String): RepositoryAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in RepositoryAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return RepositoryAction.None
-        }
-    }
-}
-
-enum class StarAction {
-    None,
-    Created,
-    Deleted;
-
-    companion object {
-        fun value(name: String): StarAction {
-            val realName = name.toLowerCase().dropWhile { it == '_' }
-            for (v in StarAction.values()) {
-                if (v.name.toLowerCase() == name) {
-                    return v
-                }
-            }
-            return StarAction.None
-        }
-    }
 }
 
 open class Event (
-    val type: EventType = EventType.None,
-    open val guid: String
+    var type: EventType = EventType.None,
+    var guid: String? = null
 ) {
     var action: String? = null
     var sender: Sender? = null

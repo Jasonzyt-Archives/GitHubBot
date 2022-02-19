@@ -6,12 +6,34 @@ import okhttp3.*
 object GitHub {
     var auth: String? = null
 
+    class Communication {
+        var pullRequest: PullRequest? = null
+        var issue: Issue? = null
+        var discussion: Discussion? = null
+
+        fun isPullRequest(): Boolean {
+            return pullRequest != null
+        }
+
+        fun isIssue(): Boolean {
+            return issue != null
+        }
+
+        fun isDiscussion(): Boolean {
+            return discussion != null
+        }
+
+        fun isValid(): Boolean {
+            return isPullRequest() || isIssue() || isDiscussion()
+        }
+    }
+
     class Repo(val name: String) {
 
         fun getIssue(id: Int): Issue? {
             val resp = httpGet("https://api.github.com/repos/${name}/issues/$id")
             if (resp.code == 200) {
-                val json = resp.body.toString()
+                val json = resp.body?.charStream()?.readText()
                 return try {
                     Gson().fromJson(json, Issue::class.java)
                 } catch (e: Exception) {
@@ -23,30 +45,51 @@ object GitHub {
             return null
         }
 
-        fun getIssueOrPullRequest(id: Int): IssueOrPullRequest? {
-            val issueOrPullRequest = IssueOrPullRequest()
-            val resp = httpGet("https://api.github.com/repos/$name/issues/$id")
+        fun getCommunication(id: Int): Communication {
+            val communication = Communication()
+            var resp = httpGet("https://api.github.com/repos/$name/pulls/$id")
             if (resp.code == 200) {
-                val json = resp.body.toString()
-                issueOrPullRequest.pullRequest = try {
+                val json = resp.body?.string()
+                communication.pullRequest = try {
                     Gson().fromJson(json, PullRequest::class.java)
                 } catch (e: Exception) {
                     PluginMain.logger.error("Failed to parse event JSON: $json")
                     PluginMain.logger.error(e)
                     null
                 }
+                return communication
             }
-            else if (resp.code == 404) {
-                val issue = getIssue(id) ?: return null
-                issueOrPullRequest.issue = issue
+            resp = httpGet("https://api.github.com/repos/$name/discussions/$id")
+            if (resp.code == 200) {
+                val json = resp.body?.string()
+                communication.discussion = try {
+                    Gson().fromJson(json, Discussion::class.java)
+                } catch (e: Exception) {
+                    PluginMain.logger.error("Failed to parse event JSON: $json")
+                    PluginMain.logger.error(e)
+                    null
+                }
+                return communication
             }
-            return null
+            resp = httpGet("https://api.github.com/repos/$name/issues/$id")
+            if (resp.code == 200) {
+                val json = resp.body?.string()
+                communication.issue = try {
+                    Gson().fromJson(json, Issue::class.java)
+                } catch (e: Exception) {
+                    PluginMain.logger.error("Failed to parse event JSON: $json")
+                    PluginMain.logger.error(e)
+                    null
+                }
+                return communication
+            }
+            return communication
         }
 
         fun getStarCount(): Int {
             val resp = httpGet("https://api.github.com/repos/$name")
             if (resp.code == 200) {
-                val json = resp.body.toString()
+                val json = resp.body?.charStream()?.readText()
                 return try {
                     Gson().fromJson(json, Repository::class.java).stargazers_count
                 } catch (e: Exception) {
@@ -76,7 +119,7 @@ object GitHub {
     }
 
     fun httpGet(url: String, headersBuilder: Headers.Builder = Headers.Builder()): Response {
-        headersBuilder.add("Authorization", auth!!)
+        if (auth != null) headersBuilder.add("Authorization", auth!!)
         headersBuilder.add("Accept", "application/vnd.github.v3+json")
         val httpClient = OkHttpClient()
         val request = Request.Builder()
@@ -87,6 +130,9 @@ object GitHub {
     }
 
     fun setToken(token: String) {
+        if (token.isEmpty()) {
+            return
+        }
         val base64 = Utils.base64Encode(token.toByteArray())
         auth = "Basic $base64"
     }
