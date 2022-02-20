@@ -7,6 +7,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 object Webhook {
 
@@ -22,41 +24,45 @@ object Webhook {
     }
 
     fun start() {
-        embeddedServer(Netty, port = Settings.webhookPort) {
-            routing {
-                post(Settings.webhookPath) {
-                    val signature = call.request.headers["X-Hub-Signature-256"]
-                    if (signature != null && checkSignature(call.receiveText(), signature)) {
-                        val eventStr = call.request.headers["X-GitHub-Event"]
-                        if (eventStr == null) {
-                            call.respond(HttpStatusCode.BadRequest, "Missing X-GitHub-Event header")
-                            return@post
-                        }
-                        val eventType = EventType.value(eventStr)
-                        val json = call.receiveText()
-                        val event = Event.fromJson(json)
-                        val guid = call.request.headers["X-GitHub-Delivery"]
-                        if (event == null) {
-                            call.respond(HttpStatusCode.InternalServerError, "Parse JSON failed")
-                            return@post
-                        }
-                        event.type = eventType
-                        event.guid = guid
-                        when (eventType) {
-                            EventType.Issues -> {
-                                PluginMain.addMessage(
-                                    788712885,
-                                    "Webhook: Issue#${event.issue?.number} Action: ${event.action}"
-                                )
+        CoroutineScope(PluginMain.coroutineContext).launch {
+            embeddedServer(Netty, port = Settings.webhookPort) {
+                routing {
+                    post(Settings.webhookPath) {
+                        val signature = call.request.headers["X-Hub-Signature-256"]
+                        val body = call.receiveText()
+                        PluginMain.logger.info("Received post request from ${call.request.host()}")
+                        PluginMain.logger.info("body: $body")
+                        if (signature != null && checkSignature(body, signature)) {
+                            val eventStr = call.request.headers["X-GitHub-Event"]
+                            if (eventStr == null) {
+                                call.respond(HttpStatusCode.BadRequest, "Missing X-GitHub-Event header")
+                                return@post
                             }
+                            val eventType = EventType.value(eventStr)
+                            val event = Event.fromJson(body)
+                            val guid = call.request.headers["X-GitHub-Delivery"]
+                            if (event == null) {
+                                call.respond(HttpStatusCode.InternalServerError, "Parse JSON failed")
+                                return@post
+                            }
+                            event.type = eventType
+                            event.guid = guid
+                            when (eventType) {
+                                EventType.Issues -> {
+                                    PluginMain.addMessage(
+                                        788712885,
+                                        "Webhook: Issue#${event.issue?.number} Action: ${event.action}"
+                                    )
+                                }
+                            }
+                        } else {
+                            PluginMain.logger.warning("Webhook: Invalid signature. Ignored.")
+                            call.respond(HttpStatusCode.Forbidden, "Invalid signature")
                         }
-                    } else {
-                        PluginMain.logger.warning("Webhook: Invalid signature. Ignored.")
-                        call.respond(HttpStatusCode.Forbidden, "Invalid signature")
                     }
                 }
-            }
-        }.start(wait = true)
+            }.start(wait = true)
+        }
         PluginMain.logger.info("Webhook(HTTPServer) started")
     }
 

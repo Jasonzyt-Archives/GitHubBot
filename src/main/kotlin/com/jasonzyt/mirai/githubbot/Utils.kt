@@ -1,13 +1,15 @@
 package com.jasonzyt.mirai.githubbot
 
+import com.jasonzyt.mirai.githubbot.selenium.Selenium
+import kotlinx.coroutines.delay
+import org.openqa.selenium.By
+import org.openqa.selenium.OutputType
+import xyz.cssxsh.selenium.isReady
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.jvmName
 
 object Utils {
 
@@ -66,6 +68,28 @@ object Utils {
         result[2] = (num ushr 8 and 0xff).toByte()
         result[3] = (num ushr 0 and 0xff).toByte()
         return result
+    }
+
+    suspend fun getIssueScreenshot(url: String, nodeId: String): ByteArray {
+        PluginMain.logger.info("getIssueScreenshot: $url: $nodeId")
+        Selenium.driver.get(url)
+        val start = System.currentTimeMillis()
+        while (true) {
+            if (Selenium.driver.isReady()) break
+            delay(1000L)
+            val current = System.currentTimeMillis()
+            if (current - start > 60_000) break
+        }
+        val elements = Selenium.driver.findElements(By.cssSelector(".TimelineItem"))
+        for (element in elements) {
+            PluginMain.logger.info("get1")
+            if (element.getAttribute("data-gid") == nodeId) {
+                PluginMain.logger.info("get2")
+                element.click()
+                return element.getScreenshotAs(OutputType.BYTES)
+            }
+        }
+        return ByteArray(0)
     }
 
 }

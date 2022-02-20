@@ -44,6 +44,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
     val reply: Map<String, ReplySettings> by value()
     @ValueDescription("全局忽略成员列表(这些成员的发言将不会触发回复)")
     val ignoresMembers: List<Long> by value()
+    @ValueDescription("是否启用截图功能(需要前置插件)")
+    val enableScreenshot: Boolean by value(true)
 
     fun getGroupSettings(groupId: Long): GroupSettings? {
         return groups[groupId.toString()]

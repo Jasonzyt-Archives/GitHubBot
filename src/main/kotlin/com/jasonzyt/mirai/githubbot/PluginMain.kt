@@ -1,18 +1,20 @@
 package com.jasonzyt.mirai.githubbot
 
+import com.jasonzyt.mirai.githubbot.selenium.Selenium
+import com.jasonzyt.mirai.githubbot.selenium.SeleniumConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
-import java.util.logging.Level
-import java.util.logging.Logger
-
+import java.io.File
+import java.util.*
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
@@ -22,6 +24,7 @@ object PluginMain : KotlinPlugin(
     ) {
         author("Jasonzyt")
         info("Powerful GitHubBot by Jasonzyt. GitHub: https://github.com/Jasonzyt/GitHubBot")
+        dependsOn("xyz.cssxsh.mirai.plugin.mirai-selenium-plugin", true)
     }
 ) {
 
@@ -67,9 +70,7 @@ object PluginMain : KotlinPlugin(
     override fun onEnable() {
         logger.info("GitHubBot loaded! Author: Jasonzyt")
         logger.info("GitHub Repository: https://github.com/Jasonzyt/GitHubBot")
-        Settings.reload()
         //Logger.getLogger(okhttp3.OkHttpClient::class.java.name).level = Level.OFF
-        GitHub.setToken(Settings.restApiToken)
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent>{ ev ->
             val groupSettings = Settings.getGroupSettings(ev.group.id)
@@ -92,7 +93,20 @@ object PluginMain : KotlinPlugin(
                     if (communication.isIssue()) {
                         val replySettings = Settings.getGroupReplySettings(ev.group.id, "issue")
                         if (replySettings != null && replySettings.enabled && replySettings.message != null) {
-                            ev.group.sendMessage(Utils.format(replySettings.message, communication.issue))
+                            val image = communication.issue?.let { Utils.getIssueScreenshot(it.html_url, it.node_id) }
+                            if (image == null) {
+                                ev.group.sendMessage("Cant get issue screenshot")
+                                return@subscribeAlways
+                            }
+                            val builder = MessageChainBuilder()
+                            builder.append(Utils.format(replySettings.message, communication.issue))
+                            File("temp/com.jasonzyt.mirai.githubbot/").mkdirs()
+                            File("temp/com.jasonzyt.mirai.githubbot/" + Random(Date().time).nextLong() + ".png").apply {
+                                writeBytes(image)
+                            }.let {
+                                builder.append(group.uploadImage(it))
+                            }
+                            ev.group.sendMessage(builder.build())
                         }
                     } else if (communication.isPullRequest()) {
                         val replySettings = Settings.getGroupReplySettings(ev.group.id, "pull_request")
@@ -108,7 +122,15 @@ object PluginMain : KotlinPlugin(
                 }
             }
         }
+        Settings.reload()
+        SeleniumConfig.reload()
+        GitHub.setToken(Settings.restApiToken)
+        Selenium.init()
         startSending()
-        Webhook.start()
+        //Webhook.start()
+    }
+
+    override fun onDisable() {
+        Selenium.quit()
     }
 }
