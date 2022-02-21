@@ -100,8 +100,7 @@ object PluginMain : KotlinPlugin(
                             }
                             val builder = MessageChainBuilder()
                             builder.append(Utils.format(replySettings.message, communication.issue))
-                            File("temp/com.jasonzyt.mirai.githubbot/").mkdirs()
-                            File("temp/com.jasonzyt.mirai.githubbot/" + Random(Date().time).nextLong() + ".png").apply {
+                            File.createTempFile("com_jasonzyt_mirai_githubbot_", ".png").apply {
                                 writeBytes(image)
                             }.let {
                                 builder.append(group.uploadImage(it))
