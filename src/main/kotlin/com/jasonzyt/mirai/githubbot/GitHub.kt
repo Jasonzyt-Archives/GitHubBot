@@ -30,50 +30,64 @@ object GitHub {
 
     class Repo(val name: String) {
 
-        fun getCommunication(id: Int): Communication {
-            val communication = Communication()
-            var resp = httpGet("https://api.github.com/repos/$name/pulls/$id")
+        fun getIssue(num: Int): Issue? {
+            var issue: Issue? = Issue()
+            val resp = httpGet("https://api.github.com/repos/$name/issues/$num")
             if (resp.code == 200) {
                 val json = resp.body?.string()
-                communication.pullRequest = try {
-                    Gson().fromJson(json, PullRequest::class.java)
-                } catch (e: Exception) {
-                    PluginMain.logger.error("Failed to parse event JSON: $json")
-                    PluginMain.logger.error(e)
-                    null
-                }
-                resp.close()
-                return communication
-            }
-            resp.close()
-            resp = httpGet("https://api.github.com/repos/$name/discussions/$id")
-            if (resp.code == 200) {
-                val json = resp.body?.string()
-                communication.discussion = try {
-                    Gson().fromJson(json, Discussion::class.java)
-                } catch (e: Exception) {
-                    PluginMain.logger.error("Failed to parse event JSON: $json")
-                    PluginMain.logger.error(e)
-                    null
-                }
-                resp.close()
-                return communication
-            }
-            resp.close()
-            resp = httpGet("https://api.github.com/repos/$name/issues/$id")
-            if (resp.code == 200) {
-                val json = resp.body?.string()
-                communication.issue = try {
+                issue = try {
                     Gson().fromJson(json, Issue::class.java)
                 } catch (e: Exception) {
                     PluginMain.logger.error("Failed to parse event JSON: $json")
                     PluginMain.logger.error(e)
                     null
                 }
-                resp.close()
-                return communication
             }
             resp.close()
+            return issue
+        }
+
+        fun getPullRequest(num: Int): PullRequest? {
+            var pullRequest: PullRequest? = PullRequest()
+            val resp = httpGet("https://api.github.com/repos/$name/pulls/$num")
+            if (resp.code == 200) {
+                val json = resp.body?.string()
+                pullRequest = try {
+                    Gson().fromJson(json, PullRequest::class.java)
+                } catch (e: Exception) {
+                    PluginMain.logger.error("Failed to parse event JSON: $json")
+                    PluginMain.logger.error(e)
+                    null
+                }
+            }
+            resp.close()
+            return pullRequest
+        }
+
+        fun getDiscussion(num: Int): Discussion? {
+            var discussion: Discussion? = Discussion()
+            val resp = httpGet("https://api.github.com/repos/$name/issues/$num")
+            if (resp.code == 200) {
+                val json = resp.body?.string()
+                discussion = try {
+                    Gson().fromJson(json, Discussion::class.java)
+                } catch (e: Exception) {
+                    PluginMain.logger.error("Failed to parse event JSON: $json")
+                    PluginMain.logger.error(e)
+                    null
+                }
+            }
+            resp.close()
+            return discussion
+        }
+
+        fun getCommunication(num: Int): Communication {
+            val communication = Communication()
+            communication.pullRequest = getPullRequest(num)
+            if (communication.pullRequest != null) return communication
+            communication.discussion = getDiscussion(num)
+            if (communication.discussion != null) return communication
+            communication.issue = getIssue(num)
             return communication
         }
 

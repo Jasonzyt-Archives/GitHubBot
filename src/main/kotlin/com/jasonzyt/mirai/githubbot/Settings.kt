@@ -10,6 +10,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
     class ReplySettings {
         val enabled: Boolean = false
         val message: String? = null
+        val regex: String? = null
+        val key: Map<String, Int>? = null
     }
     @Serializable
     class ForwardSettings {
@@ -40,7 +42,7 @@ object Settings : ReadOnlyPluginConfig("settings") {
     val defaultRepo: String by value("")
     @ValueDescription("全局Webhook事件转发设置")
     val forward: Map<String, ForwardSettings> by value()
-    @ValueDescription("全局回复设置(目前仅支持issue, pull_request和discussion)")
+    @ValueDescription("全局回复设置")
     val reply: Map<String, ReplySettings> by value()
     @ValueDescription("全局忽略成员列表(这些成员的发言将不会触发回复)")
     val ignoresMembers: List<Long> by value()
@@ -54,14 +56,20 @@ object Settings : ReadOnlyPluginConfig("settings") {
     fun getGroupReplySettings(groupId: Long, event: String): ReplySettings? {
         val groupSettings = getGroupSettings(groupId) ?: return reply[event]
         if (groupSettings.reply == null) {
-            return Settings.reply[event]
+            return reply[event]
         }
         return groupSettings.reply?.get(event)
     }
 
     fun getGroupDefaultRepo(groupId: Long): String? {
+        val groupSettings = getGroupSettings(groupId) ?: return null
+        return if (groupSettings.defaultRepo == null) defaultRepo
+               else groupSettings.defaultRepo
+    }
+
+    fun isGroupEnabled(groupId: Long): Boolean {
         val groupSettings = getGroupSettings(groupId)
-        return groupSettings?.defaultRepo ?: defaultRepo.ifEmpty { null }
+        return groupSettings?.enabled ?: false
     }
 
 }

@@ -12,19 +12,28 @@ import xyz.cssxsh.selenium.isReady
 
 class Selenium(url: String) {
     init {
-        driver.get(url)
+        if (driver.currentUrl != url)
+            driver.get(url)
     }
 
-    fun getElementsByCssSelector(cssSelector: String): List<WebElement>? {
+    fun findtElementsByCssSelector(cssSelector: String): List<WebElement>? {
         return driver.findElements(By.cssSelector(cssSelector))
     }
-    fun getElementByAttribute(attribute: String, value: String): WebElement? {
+    fun findElementByAttribute(attribute: String, value: String): WebElement? {
         return driver.findElement(By.cssSelector("[$attribute='$value']"))
     }
-
-    fun resizeWindow(width: Int, height: Int) {
-        driver.manage().window().size = Dimension(width, height)
+    fun findElements(by: By): List<WebElement>? {
+        return driver.findElements(by)
     }
+    fun findElement(by: By): WebElement? {
+        return driver.findElement(by)
+    }
+
+    var windowSize: Dimension
+        get() = driver.manage().window().size
+        set(value) {
+            driver.manage().window().size = value
+        }
 
     suspend fun waitForReady(timeout: Long = 10000) {
         val start = System.currentTimeMillis()

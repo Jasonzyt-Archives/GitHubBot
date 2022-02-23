@@ -72,54 +72,82 @@ object PluginMain : KotlinPlugin(
         logger.info("GitHub Repository: https://github.com/Jasonzyt/GitHubBot")
         //Logger.getLogger(okhttp3.OkHttpClient::class.java.name).level = Level.OFF
         val eventChannel = GlobalEventChannel.parentScope(this)
-        eventChannel.subscribeAlways<GroupMessageEvent>{ ev ->
+        eventChannel.subscribeAlways<GroupMessageEvent> { ev ->
             val groupSettings = Settings.getGroupSettings(ev.group.id)
-            val defaultRepo = Settings.getGroupDefaultRepo(ev.group.id)
+            var defaultRepo = Settings.getGroupDefaultRepo(ev.group.id)
             if (
                 groupSettings == null ||
                 ev.bot.id == ev.sender.id ||
-                defaultRepo == null ||
                 groupSettings.ignoresMembers?.contains(ev.sender.id) == true ||
-                Settings.ignoresMembers.contains(ev.sender.id)
+                Settings.ignoresMembers.contains(ev.sender.id) ||
+                !groupSettings.enabled ||
+                groupSettings.reply == null
             ) {
                 return@subscribeAlways
             }
+            if (defaultRepo?.isEmpty() == true) defaultRepo = null
 
-            if (groupSettings.enabled && groupSettings.defaultRepo?.isNotEmpty() == true) {
-                val results = Regex("#([0-9]+)").findAll(ev.message.contentToString())
-                for (result in results) {
-                    val number = result.value.drop(1).toInt()
-                    val communication = GitHub.Repo(defaultRepo).getCommunication(number)
-                    if (communication.isIssue()) {
-                        val replySettings = Settings.getGroupReplySettings(ev.group.id, "issue")
-                        if (replySettings != null && replySettings.enabled && replySettings.message != null) {
-                            val image = communication.issue?.let { Utils.getIssueScreenshot(it.html_url, it.node_id) }
-                            if (image == null) {
-                                ev.group.sendMessage("Cant get issue screenshot")
-                                return@subscribeAlways
+            val replySettings = groupSettings.reply!!
+            // todo: multi regex support
+
+            if (defaultRepo != null) {
+                val found = mutableListOf<Int>()
+                if (replySettings["pull_request"]?.enabled == true) {
+                    val regex =
+                        if (replySettings["pull_request"]?.regex != null) replySettings["pull_request"]?.regex!! else "#([1-9][0-9]*)"
+                    regex.toRegex().findAll(ev.message.contentToString()).forEach {
+                        val index = replySettings["pull_request"]?.key?.get("number") ?: 0
+                        if (index >= 0 && index < it.groupValues.size) {
+                            val num = it.groupValues[index].toInt()
+                            if (found.contains(num)) return@forEach
+                            val pullRequest = GitHub.Repo(defaultRepo).getPullRequest(num)
+                            if (pullRequest != null) {
+                                found.add(num)
+                                val str = Utils.format(replySettings["pull_request"]?.message ?: "", pullRequest)
+                                ev.group.sendMessage(Utils.buildImageMessage(str, ev.group))
                             }
-                            val builder = MessageChainBuilder()
-                            builder.append(Utils.format(replySettings.message, communication.issue))
-                            File.createTempFile("com_jasonzyt_mirai_githubbot_", ".png").apply {
-                                writeBytes(image)
-                            }.let {
-                                builder.append(group.uploadImage(it))
+                        }
+                    }
+                }
+                if (replySettings["discussion"]?.enabled == true) {
+                    val regex =
+                        if (replySettings["discussion"]?.regex != null) replySettings["discussion"]?.regex!! else "#([1-9][0-9]*)"
+                    regex.toRegex().findAll(ev.message.contentToString()).forEach {
+                        val index = replySettings["discussion"]?.key?.get("number") ?: 0
+                        if (index >= 0 && index < it.groupValues.size) {
+                            val num = it.groupValues[index].toInt()
+                            if (found.contains(num)) return@forEach
+                            val discussion = GitHub.Repo(defaultRepo).getDiscussion(num)
+                            if (discussion != null) {
+                                found.add(num)
+                                val str = Utils.format(replySettings["discussion"]?.message ?: "", discussion)
+                                ev.group.sendMessage(Utils.buildImageMessage(str, ev.group))
                             }
-                            ev.group.sendMessage(builder.build())
                         }
-                    } else if (communication.isPullRequest()) {
-                        val replySettings = Settings.getGroupReplySettings(ev.group.id, "pull_request")
-                        if (replySettings != null && replySettings.enabled && replySettings.message != null) {
-                            ev.group.sendMessage(Utils.format(replySettings.message, communication.pullRequest))
-                        }
-                    } else if (communication.isDiscussion()) {
-                        val replySettings = Settings.getGroupReplySettings(ev.group.id, "discussion")
-                        if (replySettings != null && replySettings.enabled && replySettings.message != null) {
-                            ev.group.sendMessage(Utils.format(replySettings.message, communication.discussion))
+                    }
+                }
+                if (replySettings["issue"]?.enabled == true) {
+                    val regex =
+                        if (replySettings["issue"]?.regex != null) replySettings["issue"]?.regex!! else "#([1-9][0-9]*)"
+                    regex.toRegex().findAll(ev.message.contentToString()).forEach {
+                        val index = replySettings["issue"]?.key?.get("number") ?: 0
+                        if (index >= 0 && index < it.groupValues.size) {
+                            val num = it.groupValues[index].toInt()
+                            if (found.contains(num)) return@forEach
+                            val issue = GitHub.Repo(defaultRepo).getIssue(num)
+                            if (issue != null) {
+                                found.add(num)
+                                val str = Utils.format(replySettings["issue"]?.message ?: "", issue)
+                                ev.group.sendMessage(Utils.buildImageMessage(str, ev.group))
+                            }
                         }
                     }
                 }
             }
+
+            //if (replySettings["repository"]?.enabled == true) {
+            //    val regex = if (replySettings["repository"]?.regex != null) replySettings["repository"]?.regex!! else ""
+            //}
         }
         Settings.reload()
         SeleniumConfig.reload()
