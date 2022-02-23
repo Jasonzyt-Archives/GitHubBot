@@ -7,26 +7,30 @@ import net.mamoe.mirai.console.data.value
 
 object Settings : ReadOnlyPluginConfig("settings") {
     @Serializable
+    class RegexSettings {
+        val regex: String = ""
+        val keys: Map<String, Int> = mapOf()
+    }
+    @Serializable
     class ReplySettings {
         val enabled: Boolean = false
         val message: String? = null
-        val regex: String? = null
-        val key: Map<String, Int>? = null
+        val matches: List<RegexSettings> = listOf()
     }
     @Serializable
     class ForwardSettings {
-        var enabled: Boolean = false
-        var message: String? = null
+        val enabled: Boolean = false
+        val message: String? = null
     }
     @Serializable
     class GroupSettings {
-        var enabled: Boolean = false
-        var defaultRepo: String? = null
-        var webhookRepos: List<String>? = null
-        var ignoresMembers: List<Long>? = null
-        var forward: Map<String, ForwardSettings>? = null
-        var reply: Map<String, ReplySettings>? = null
-        var dailySummary: Boolean = true
+        val enabled: Boolean = false
+        val defaultRepo: String? = null
+        val webhookRepos: List<String>? = null
+        val ignoresMembers: List<Long>? = null
+        val forward: Map<String, ForwardSettings>? = null
+        val reply: Map<String, ReplySettings>? = null
+        val dailySummary: Boolean = true
     }
     @ValueDescription("群聊消息设置")
     val groups: Map<String, GroupSettings> by value()

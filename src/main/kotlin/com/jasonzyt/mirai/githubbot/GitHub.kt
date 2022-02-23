@@ -6,6 +6,15 @@ import okhttp3.*
 object GitHub {
     var auth: String? = null
 
+    fun getRepository(owner: String, repo: String): Repository? {
+        val resp = httpGet("https://api.github.com/repos/$owner/$repo")
+        if (resp.code == 200) {
+            val body = resp.body?.string()
+            return Gson().fromJson(body, Repository::class.java)
+        }
+        return null
+    }
+
     class Communication {
         var pullRequest: PullRequest? = null
         var issue: Issue? = null
@@ -28,11 +37,11 @@ object GitHub {
         }
     }
 
-    class Repo(val name: String) {
+    class Repo(override var full_name: String): Repository() {
 
         fun getIssue(num: Int): Issue? {
             var issue: Issue? = Issue()
-            val resp = httpGet("https://api.github.com/repos/$name/issues/$num")
+            val resp = httpGet("https://api.github.com/repos/$full_name/issues/$num")
             if (resp.code == 200) {
                 val json = resp.body?.string()
                 issue = try {
@@ -49,7 +58,7 @@ object GitHub {
 
         fun getPullRequest(num: Int): PullRequest? {
             var pullRequest: PullRequest? = PullRequest()
-            val resp = httpGet("https://api.github.com/repos/$name/pulls/$num")
+            val resp = httpGet("https://api.github.com/repos/$full_name/pulls/$num")
             if (resp.code == 200) {
                 val json = resp.body?.string()
                 pullRequest = try {
@@ -66,7 +75,7 @@ object GitHub {
 
         fun getDiscussion(num: Int): Discussion? {
             var discussion: Discussion? = Discussion()
-            val resp = httpGet("https://api.github.com/repos/$name/issues/$num")
+            val resp = httpGet("https://api.github.com/repos/$full_name/issues/$num")
             if (resp.code == 200) {
                 val json = resp.body?.string()
                 discussion = try {
@@ -92,7 +101,7 @@ object GitHub {
         }
 
         fun getStarCount(): Int {
-            val resp = httpGet("https://api.github.com/repos/$name")
+            val resp = httpGet("https://api.github.com/repos/$full_name")
             if (resp.code == 200) {
                 val json = resp.body?.charStream()?.readText()
                 resp.close()
@@ -109,7 +118,7 @@ object GitHub {
         }
 
         fun getCommitCount(): Int {
-            val resp = httpGet("https://api.github.com/repos/$name/commits?per_page=1")
+            val resp = httpGet("https://api.github.com/repos/$full_name/commits?per_page=1")
             if (resp.code == 200) {
                 val link = resp.headers["link"]
                 resp.close()

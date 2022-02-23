@@ -73,11 +73,11 @@ open class Committer {
 
 class Pusher : Committer()
 
-class Repository {
+open class Repository {
     var id: Long = 0
     var node_id: String = ""
     var name: String = ""
-    var full_name: String = ""
+    open var full_name: String = ""
     var private: Boolean = false
     var owner: User? = null
     var description: String? = null
