@@ -15,6 +15,15 @@ object GitHub {
         return null
     }
 
+    fun getUser(username: String): User? {
+        val resp = httpGet("https://api.github.com/users/$username")
+        if (resp.code == 200) {
+            val body = resp.body?.string()
+            return Gson().fromJson(body, User::class.java)
+        }
+        return null
+    }
+
     class Communication {
         var pullRequest: PullRequest? = null
         var issue: Issue? = null
