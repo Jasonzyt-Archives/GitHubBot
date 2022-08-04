@@ -7,7 +7,7 @@ import org.openqa.selenium.By
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.remote.RemoteWebDriver
-import xyz.cssxsh.mirai.plugin.MiraiSeleniumPlugin
+import xyz.cssxsh.mirai.selenium.MiraiSeleniumPlugin
 import xyz.cssxsh.selenium.isReady
 
 class Selenium(url: String) {

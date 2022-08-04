@@ -19,9 +19,12 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.9.0")
-    compileOnly("xyz.cssxsh.mirai:mirai-selenium-plugin:2.0.8")
-    implementation("io.ktor:ktor-server-core:2.0.0-beta-1")
-    implementation("io.ktor:ktor-server-netty:2.0.0-beta-1")
-    implementation("io.ktor:ktor-server-status-pages:2.0.0-beta-1")
-    implementation("io.ktor:ktor-server-default-headers:2.0.0-beta-1")
+    compileOnly("xyz.cssxsh.mirai:mirai-selenium-plugin:2.2.0")
+    implementation("com.vdurmont:emoji-java:5.1.1")
+    implementation("io.ktor:ktor-server-core:2.0.3")
+    implementation("io.ktor:ktor-server-netty:2.0.3")
+    implementation("io.ktor:ktor-server-status-pages:2.0.3")
+    implementation("io.ktor:ktor-server-default-headers:2.0.3")
+    implementation("io.ktor:ktor-client-core:2.0.3")
+    implementation("io.ktor:ktor-client-okhttp:2.0.3")
 }

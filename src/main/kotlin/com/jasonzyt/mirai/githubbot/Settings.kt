@@ -13,8 +13,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
     }
     @Serializable
     class ForwardSettings {
-        var enabled: Boolean = false
-        var message: String? = null
+        val enabled: Boolean = false
+        val message: String? = null
     }
     @Serializable
     class GroupSettings {
@@ -51,12 +51,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
         return groups[groupId.toString()]
     }
 
-    fun getGroupReplySettings(groupId: Long, event: String): ReplySettings? {
-        val groupSettings = getGroupSettings(groupId) ?: return reply[event]
-        if (groupSettings.reply == null) {
-            return Settings.reply[event]
-        }
-        return groupSettings.reply?.get(event)
+    fun getGroupReplySettings(groupId: Long, event: String): Map<String, ReplySettings> {
+        return getGroupSettings(groupId)?.reply ?: reply
     }
 
     fun getGroupDefaultRepo(groupId: Long): String? {

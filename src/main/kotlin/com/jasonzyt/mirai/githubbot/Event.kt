@@ -2,6 +2,8 @@ package com.jasonzyt.mirai.githubbot
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.jasonzyt.mirai.githubbot.utils.Utils
+import com.vdurmont.emoji.EmojiManager
 import java.util.*
 
 open class User {
@@ -377,28 +379,28 @@ class Reactions {
     override fun toString(): String {
         val builder = StringBuilder()
         if (plus > 0) {
-            builder.append(Utils.getEmoji("1f44d")).append(plus).append(" ")
+            builder.append(EmojiManager.getForAlias("+1").unicode).append(plus).append(" ")
         }
         if (minus > 0) {
-            builder.append(Utils.getEmoji("1f44e")).append(minus).append(" ")
+            builder.append(EmojiManager.getForAlias("-1").unicode).append(minus).append(" ")
         }
         if (laugh > 0) {
-            builder.append(Utils.getEmoji("1f604")).append(laugh).append(" ")
+            builder.append(EmojiManager.getForAlias("smile").unicode).append(laugh).append(" ")
         }
         if (hooray > 0) {
-            builder.append(Utils.getEmoji("1f389")).append(hooray).append(" ")
+            builder.append(EmojiManager.getForAlias("tada").unicode).append(hooray).append(" ")
         }
         if (confused > 0) {
-            builder.append(Utils.getEmoji("1f615")).append(confused).append(" ")
+            builder.append(EmojiManager.getForAlias("confused").unicode).append(confused).append(" ")
         }
         if (heart > 0) {
-            builder.append(Utils.getEmoji("2764")).append(heart).append(" ")
+            builder.append(EmojiManager.getForAlias("red_heart").unicode).append(heart).append(" ")
         }
         if (rocket > 0) {
-            builder.append(Utils.getEmoji("1f680")).append(rocket).append(" ")
+            builder.append(EmojiManager.getForAlias("rocket").unicode).append(rocket).append(" ")
         }
         if (eyes > 0) {
-            builder.append(Utils.getEmoji("1f440")).append(eyes).append(" ")
+            builder.append(EmojiManager.getForAlias("eyes").unicode).append(eyes).append(" ")
         }
         if (builder[builder.length - 1] == ' ') {
             builder.deleteCharAt(builder.length - 1)

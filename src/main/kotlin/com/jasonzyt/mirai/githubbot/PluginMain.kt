@@ -1,7 +1,9 @@
 package com.jasonzyt.mirai.githubbot
 
+import com.jasonzyt.mirai.githubbot.network.GitHub
 import com.jasonzyt.mirai.githubbot.selenium.Selenium
 import com.jasonzyt.mirai.githubbot.selenium.SeleniumConfig
+import com.jasonzyt.mirai.githubbot.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -14,7 +16,6 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import java.io.File
-import java.util.*
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
@@ -70,19 +71,24 @@ object PluginMain : KotlinPlugin(
     override fun onEnable() {
         logger.info("GitHubBot loaded! Author: Jasonzyt")
         logger.info("GitHub Repository: https://github.com/Jasonzyt/GitHubBot")
-        //Logger.getLogger(okhttp3.OkHttpClient::class.java.name).level = Level.OFF
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent>{ ev ->
             val groupSettings = Settings.getGroupSettings(ev.group.id)
+            val replySettings = Settings.getGroupReplySettings(ev.group.id)
             val defaultRepo = Settings.getGroupDefaultRepo(ev.group.id)
             if (
                 groupSettings == null ||
                 ev.bot.id == ev.sender.id ||
                 defaultRepo == null ||
                 groupSettings.ignoresMembers?.contains(ev.sender.id) == true ||
-                Settings.ignoresMembers.contains(ev.sender.id)
+                Settings.ignoresMembers.contains(ev.sender.id) ||
+                !groupSettings.enabled
             ) {
                 return@subscribeAlways
+            }
+
+            for ((name, setting) in replySettings) {
+
             }
 
             if (groupSettings.enabled && groupSettings.defaultRepo?.isNotEmpty() == true) {
@@ -93,12 +99,13 @@ object PluginMain : KotlinPlugin(
                     if (communication.isIssue()) {
                         val replySettings = Settings.getGroupReplySettings(ev.group.id, "issue")
                         if (replySettings != null && replySettings.enabled && replySettings.message != null) {
+                            val builder = MessageChainBuilder()
+
                             val image = communication.issue?.let { Utils.getIssueScreenshot(it.html_url, it.node_id) }
                             if (image == null) {
-                                ev.group.sendMessage("Cant get issue screenshot")
+                                ev.group.sendMessage("Cant take issue screenshot")
                                 return@subscribeAlways
                             }
-                            val builder = MessageChainBuilder()
                             builder.append(Utils.format(replySettings.message, communication.issue))
                             File.createTempFile("com_jasonzyt_mirai_githubbot_", ".png").apply {
                                 writeBytes(image)
