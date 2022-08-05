@@ -7,9 +7,16 @@ import net.mamoe.mirai.console.data.value
 
 object Settings : ReadOnlyPluginConfig("settings") {
     @Serializable
+    class MatchSettings {
+        val regex: String? = null
+        val ignoreCase: Boolean = false
+        val params: Map<String, Int> = mapOf()
+    }
+    @Serializable
     class ReplySettings {
         val enabled: Boolean = false
         val message: String? = null
+        val matches: List<MatchSettings> = listOf()
     }
     @Serializable
     class ForwardSettings {
@@ -19,12 +26,12 @@ object Settings : ReadOnlyPluginConfig("settings") {
     @Serializable
     class GroupSettings {
         var enabled: Boolean = false
-        var defaultRepo: String? = null
         var webhookRepos: List<String>? = null
         var ignoresMembers: List<Long>? = null
         var forward: Map<String, ForwardSettings>? = null
         var reply: Map<String, ReplySettings>? = null
         var dailySummary: Boolean = true
+        val default: Map<String, String>? = null
     }
     @ValueDescription("群聊消息设置")
     val groups: Map<String, GroupSettings> by value()
@@ -36,8 +43,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
     val webhookPath: String by value("/hooks")
     @ValueDescription("Webhook签名密钥(空字符串代表不使用签名)")
     val webhookSecret: String by value("")
-    @ValueDescription("全局默认仓库")
-    val defaultRepo: String by value("")
+    @ValueDescription("全局默认设置")
+    val default: Map<String, String> by value()
     @ValueDescription("全局Webhook事件转发设置")
     val forward: Map<String, ForwardSettings> by value()
     @ValueDescription("全局回复设置(目前仅支持issue, pull_request和discussion)")
@@ -51,13 +58,8 @@ object Settings : ReadOnlyPluginConfig("settings") {
         return groups[groupId.toString()]
     }
 
-    fun getGroupReplySettings(groupId: Long, event: String): Map<String, ReplySettings> {
+    fun getGroupReplySettings(groupId: Long): Map<String, ReplySettings> {
         return getGroupSettings(groupId)?.reply ?: reply
-    }
-
-    fun getGroupDefaultRepo(groupId: Long): String? {
-        val groupSettings = getGroupSettings(groupId)
-        return groupSettings?.defaultRepo ?: defaultRepo.ifEmpty { null }
     }
 
 }

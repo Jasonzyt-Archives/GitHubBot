@@ -17,8 +17,6 @@ import java.io.File
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import kotlin.reflect.KClass
-import kotlin.reflect.full.memberProperties
 
 object Utils {
 
@@ -71,7 +69,7 @@ object Utils {
         return elements[0].getScreenshotAs(OutputType.FILE)
     }
 
-    suspend fun parseMessage(rawMsg: String, builder: MessageChainBuilder, contact: Contact): MessageChain {
+    suspend fun parseMedia(rawMsg: String, builder: MessageChainBuilder, contact: Contact): MessageChain {
         val regex = Regex("\\[(.+)]")
         val matches = regex.findAll(rawMsg)
         var pos = 0
@@ -80,12 +78,19 @@ object Utils {
             if (pos < match.range.first) {
                 builder.append(rawMsg.substring(pos, match.range.first))
             }
-            pos = match.range.last + 1
             // format: [{prefix}[{content}]]
-            val item = match.groupValues[1]
-            val prefix = item.substring(0, item.indexOf("["))
-            val content = item.substring(item.indexOf("[") + 1, item.indexOf("]")).trim()
-
+            val item = match.groupValues[1].trim()
+            val left = item.indexOf("[")
+            val right = item.indexOfLast { it == ']' }
+            if (left == -1 ||                // If '[' not found
+                right == -1 ||               // If ']' not found
+                right != item.length - 1 ||  // If ']' is not the last character
+                left > right) {              // If '[' is after ']'
+                continue;
+            }
+            val prefix = item.substring(0, left)
+            val content = item.substring(left + 1, right).trim()
+            pos = match.range.last + 1
             // If the content is empty, ignore it
             if (content.isEmpty()) {
                 continue

@@ -39,7 +39,7 @@ class IssueReply(
             }
             // The second format(media)
             val chainBuilder = MessageChainBuilder()
-            contact.sendMessage(Utils.parseMessage(formatter.result, chainBuilder, contact))
+            contact.sendMessage(Utils.parseMedia(formatter.result, chainBuilder, contact))
         }
         PluginMain.logger.error("Invalid parameters for issue reply, please check your config file.")
     }
@@ -72,7 +72,7 @@ class PullRequestReply(
             }
             // The second format(media)
             val chainBuilder = MessageChainBuilder()
-            contact.sendMessage(Utils.parseMessage(formatter.result, chainBuilder, contact))
+            contact.sendMessage(Utils.parseMedia(formatter.result, chainBuilder, contact))
         }
         PluginMain.logger.error("Invalid parameters for pull request reply, please check your config file.")
     }
@@ -104,7 +104,7 @@ class DiscussionReply(
             }
             // The second format(media)
             val chainBuilder = MessageChainBuilder()
-            contact.sendMessage(Utils.parseMessage(formatter.result, chainBuilder, contact))
+            contact.sendMessage(Utils.parseMedia(formatter.result, chainBuilder, contact))
         }
         PluginMain.logger.error("Invalid parameters for discussion reply, please check your config file.")
     }
@@ -152,7 +152,7 @@ class CommunicationReply(
             }
             // The second format(media)
             val chainBuilder = MessageChainBuilder()
-            contact.sendMessage(Utils.parseMessage(formatter.result, chainBuilder, contact))
+            contact.sendMessage(Utils.parseMedia(formatter.result, chainBuilder, contact))
         }
         PluginMain.logger.error("Invalid parameters for communication reply, please check your config file.")
     }
@@ -176,9 +176,8 @@ class RepositoryReply(
             }
             // The second format(media)
             val chainBuilder = MessageChainBuilder()
-            contact.sendMessage(Utils.parseMessage(formatter.result, chainBuilder, contact))
+            contact.sendMessage(Utils.parseMedia(formatter.result, chainBuilder, contact))
         }
         PluginMain.logger.error("Invalid parameters for repository reply, please check your config file.")
     }
 }
-

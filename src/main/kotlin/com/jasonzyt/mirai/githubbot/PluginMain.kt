@@ -1,8 +1,11 @@
 package com.jasonzyt.mirai.githubbot
 
+import com.jasonzyt.mirai.githubbot.message.IssueReply
+import com.jasonzyt.mirai.githubbot.message.Reply
 import com.jasonzyt.mirai.githubbot.network.GitHub
 import com.jasonzyt.mirai.githubbot.selenium.Selenium
 import com.jasonzyt.mirai.githubbot.selenium.SeleniumConfig
+import com.jasonzyt.mirai.githubbot.utils.Formatter
 import com.jasonzyt.mirai.githubbot.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -11,6 +14,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
@@ -75,20 +79,58 @@ object PluginMain : KotlinPlugin(
         eventChannel.subscribeAlways<GroupMessageEvent>{ ev ->
             val groupSettings = Settings.getGroupSettings(ev.group.id)
             val replySettings = Settings.getGroupReplySettings(ev.group.id)
-            val defaultRepo = Settings.getGroupDefaultRepo(ev.group.id)
             if (
                 groupSettings == null ||
                 ev.bot.id == ev.sender.id ||
-                defaultRepo == null ||
                 groupSettings.ignoresMembers?.contains(ev.sender.id) == true ||
                 Settings.ignoresMembers.contains(ev.sender.id) ||
                 !groupSettings.enabled
             ) {
                 return@subscribeAlways
             }
+            val defaultParams = groupSettings.default ?: Settings.default
 
             for ((name, setting) in replySettings) {
-
+                if (setting.enabled && setting.message != null) {
+                    for (match in setting.matches) {
+                        if (match.regex == null) {
+                            continue;
+                        }
+                        var regex = Regex(match.regex)
+                        if (match.ignoreCase) {
+                            regex = Regex(match.regex, RegexOption.IGNORE_CASE)
+                        }
+                        val msg = ev.message.contentToString()
+                        val result = regex.findAll(msg)
+                        if (result.count() > 0) {
+                            val qqData = object {
+                                val sender = object {
+                                    val id = ev.sender.id
+                                    val name = ev.sender.nameCardOrNick
+                                    val avatarUrl = ev.sender.avatarUrl
+                                }
+                                val group = object {
+                                    val id = ev.group.id
+                                    val name = ev.group.name
+                                    val avatarUrl = ev.group.avatarUrl
+                                    val owner = object {
+                                        val id = ev.group.owner.id
+                                        val name = ev.group.owner.nameCardOrNick
+                                        val avatarUrl = ev.group.owner.avatarUrl
+                                    }
+                                }
+                            }
+                            val formatter = Formatter(setting.message)
+                            if (formatter.require("qq")) {
+                                formatter.formatWith(qqData, "qq")
+                            }
+                            var reply: Reply? = null
+                            when (name) {
+                                "issue" -> reply = IssueReply(setting.message)
+                            }
+                        }
+                    }
+                }
             }
 
             if (groupSettings.enabled && groupSettings.defaultRepo?.isNotEmpty() == true) {

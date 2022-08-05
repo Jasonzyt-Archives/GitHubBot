@@ -7,17 +7,20 @@ import kotlin.reflect.full.memberProperties
 class Formatter(private val str: String) {
 
     private val requirements: MutableList<String> = mutableListOf()
+    private val replacements: MutableMap<String, IntRange> = mutableMapOf()
     var result: String = str
 
     init {
+        // Pre-process the string
         val regex = Regex("\\{(.+)}")
         val matches = regex.findAll(str)
         for (match in matches) {
-            val key = match.groupValues[1]
+            val key = match.groupValues[1].trim()
             val requirement = key.split('.')[0]
             if (!requirements.contains(requirement)) {
                 requirements.add(requirement)
             }
+            replacements[key] = match.range
         }
     }
 
@@ -33,13 +36,13 @@ class Formatter(private val str: String) {
 
     fun <T> formatWith(v: T, clazz: KClass<*>, prefix: String = ""): String {
         for (member in clazz.memberProperties) {
-            if (!result.contains("{${prefix}${member.name}")) {
+            if (!replacements.contains(prefix + member.name)) {
                 continue
             }
             val value = member.getter.call(v)
             if (value != null) {
                 result = format(result, value, member.returnType.classifier as KClass<*>, prefix + member.name + ".")
-                result = result.replace("{${prefix}${member.name}}", value.toString())
+                result = result.replaceRange(replacements[prefix + member.name]!!, value.toString())
             }
         }
         return result
